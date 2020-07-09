@@ -1,0 +1,13 @@
+{
+  "name": "expresspaygh/exp-php-sdk-demo",
+  "description": "A demo for the expresspaygh php sdk",
+  "minimum-stability": "stable",
+  "require": {
+    "php": "^7.0",
+    "vlucas/phpdotenv": "^5.0",
+    "expresspaygh/exp-php-sdk": "^1.0"
+  },
+  "require-dev": {
+    "fzaninotto/faker": "^1.9"
+  }
+}

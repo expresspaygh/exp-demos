@@ -178,7 +178,7 @@ body {
 						</div>
 
 						<div class="control-group" id="postal_addressDiv">
-							<label class="control-label" for="postal_address">Mailing Address
+							<label class="control-label" for="postal_address"> 
 								<font color="red">*</font>
 							</label>
 							<div class="controls">
@@ -208,7 +208,7 @@ body {
 							<div class="controls">
 								<div class="">
 									<input class="span4" type="text"
-										placeholder="eg. Premium for Insurance"
+										placeholder="eg.  "
 										name="invoice_description" id="invoice_description" required>
 								</div>
 							</div>
