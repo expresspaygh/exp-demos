@@ -5,7 +5,9 @@ require_once(dirname(__FILE__) . "/../vendor/autoload.php");
 
 use Exception;
 use Dotenv\Dotenv;
-use Expay\SDK\MerchantApi;
+use Expay\Logger\Log;
+use Rakit\Validation\Validator;
+use Expay\SDK\MerchantApi as ExpMerchantApi;
 
 /**
  * PayApi
@@ -41,7 +43,13 @@ class PayApi
    *
    * @var string
    */
-  private $order_img_url = "";
+  private $order_img_url = "";  
+  /**
+   * app_env
+   *
+   * @var string
+   */
+  private $app_env = "";
     
   /**
    * __construct
@@ -51,17 +59,17 @@ class PayApi
    */
   public function __construct(array $request)
   {
-    // load env variables
     $dotenv = Dotenv::createImmutable(__DIR__);
     $dotenv->load();
 
-    $this->merchant_id = getenv("MERCHANT_ID");
-    $this->merchant_key = getenv("MERCHANT_KEY");
-
     $this->request = $request;
 
-    $this->redirect_url = "http://jefferyosei.expresspaygh.com/exp-php-sdk-demo/public/pay.html";
-    $this->order_img_url = "https://expresspaygh.com/images/logo.png";
+    $this->merchant_id = $_ENV["EXP_MERCHANT_ID"];
+    $this->merchant_key = $_ENV["EXP_MERCHANT_KEY"];
+
+    $this->app_env = $_ENV["APP_ENV"];
+    $this->order_img_url = $_ENV["APP_LOGO_URL"];
+    $this->redirect_url = $_ENV["APP_REDIRECT_URL"];
   }
   
   /**
@@ -72,40 +80,15 @@ class PayApi
    * @param  mixed $output
    * @return array
    */
-  private function responder(int $status, string $message, array $output = null) : array
+  private function responder(int $status, string $message, array $data = null) : array
   {
     $output = array();
 
     $output["status"] = $status;
     $output["message"] = $message;
-    if (!is_null($output)) $output["output"] = $output;
+    if (!is_null($data)) $output["output"] = $data;
 
     return $output;
-  }
-    
-  /**
-   * create_invoice
-   *
-   * @return array
-   */
-  private function create_invoice() : array
-  {
-    unset($this->request["request"]);
-
-    $merchantApi = new MerchantApi($this->merchant_id, $this->merchant_key, "sandbox");
-    $response = $merchantApi->create_invoice(
-      $this->request["order_id"],
-      $this->request["currency"],
-      $this->request["amount"],
-      $this->request["account_number"],
-      $this->request["order_desc"],
-      $this->request["account_name"],
-      $this->request["phone_number"],
-      $this->request["email"],
-      $this->redirect_url
-    );
-    
-    return (array) $response;
   }
   
   /**
@@ -117,38 +100,100 @@ class PayApi
   {
     unset($this->request["request"]);
 
-    $merchantApi = new MerchantApi($this->merchant_id, $this->merchant_key, "sandbox");
+    $validator = new Validator;
+    $validation = $validator->validate($this->request, [
+      "currency" => "required|present",
+      "amount" => "required|present|numeric",
+      "order_id" => "required|present",
+      "order_description" => "required|present",
+      "account_number" => "required|present",
+      "first_name" => "required|present",
+      "last_name" => "required|present",
+      "phone_number" => "required|present|min:10|max:14",
+      "email" => "required|present|email"
+    ]);
+    if ($validation->fails()) {
+      // handling errors
+      $errors = $validation->errors();
+      return $this->responder(1, current($errors->all()));
+    }
+
+    $merchantApi = new ExpMerchantApi($this->merchant_id, $this->merchant_key, $this->app_env);
+    
     $response = $merchantApi->submit(
       $this->request["currency"],
       $this->request["amount"],
       $this->request["order_id"],
-      $this->request["order_desc"],
+      $this->request["order_description"],
       $this->redirect_url,
       $this->request["account_number"],
       $this->order_img_url,
       $this->request["first_name"],
+      $this->request["last_name"],
       $this->request["phone_number"],
       $this->request["email"]
     );
+
+    Log::info($response,true);
     
-    return (array) $response;
+    return $this->responder(0, 'Success', $response);
   }
-  
+
   /**
-   * run_request
+   * checkout
    *
    * @return array
    */
-  public function request() : ?array
+  private function checkout() : array
+  {
+    $merchantApi = new ExpMerchantApi($this->merchant_id, $this->merchant_key, $this->app_env);
+
+    $response = $merchantApi->checkout(
+      $this->request["token"]
+    );
+
+    Log::info($response,true);
+
+    return $this->responder(0, 'Success', [$response]);
+  }
+  
+  /**
+   * query
+   *
+   * @return array
+   */
+  private function query() : array
+  {
+    unset($this->request["request"]);
+
+    $merchantApi = new ExpMerchantApi($this->merchant_id, $this->merchant_key, $this->app_env);
+    $response = $merchantApi->query(
+      $this->request["token"]
+    );
+
+    Log::info($response,true);
+    
+    return $this->responder(0, 'Success', $response);
+  }
+  
+  /**
+   * handle
+   *
+   * @return array
+   */
+  public function handle() : ?array
   {
     if (!empty($this->request))
     {
-      if ($this->request["request"] == "create_invoice") {
-        return $this->create_invoice();
-      } elseif ($this->request["request"] == "submit") {
+      $request = $this->request["request"];
+      unset($this->request["request"]);
+
+      if ($request == "submit") {
         return $this->submit();
-      } elseif ($this->request["token"] && !isset($this->request["request"])) {
-        return $this->query($this->request["token"]);
+      } elseif ($request == "checkout") {
+        return $this->checkout();
+      } elseif ($request == "query") {
+        return $this->query();
       } else {
         return $this->responder(1, "Sorry, unknown request");
       }
@@ -169,11 +214,19 @@ try {
       "message" => "Request type POST expected"
     ]);
   } else {
-    $payApi = new PayApi($_POST);
-    echo json_encode($payApi->request());
+    $data = json_decode(file_get_contents("php://input"), true);
+
+    $payApi = (new PayApi($data))->handle();
+    
+    Log::info($payApi,true);
+
+    echo json_encode($payApi);
   }
 
 } catch(Exception $e) {
+  // log
+  Log::info($e->getMessage(),true);
+
   echo json_encode($e->getMessage());
 }
 

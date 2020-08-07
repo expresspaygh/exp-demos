@@ -38,42 +38,36 @@
   margin-top: 30px !important;
 }
 
-#createInvoiceContainer {
-  background-color: #e0e0e0;
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  border-radius: 5px;
-}
-
-.exp-activities {
-  background-color: #e0e0e0;
-  height: 400px;
-}
-
 .card {
   border-radius: 10px !important;
 }
 
-.exp-checkout-btn {
+.exp-invoice-btn {
   width: var(--pay-btn-width);
   font-weight: var(--pay-btn-font);
 }
 
-.exp-checkout-btn:hover {
-  background-color: #1e88e5 !important;
-}
-
-.exp-create-invoice-btn {
-  width: var(--pay-btn-width);
-  font-weight: var(--pay-btn-font);
-}
-
-.exp-create-invoice-btn:hover {
+.exp-invoice-btn:hover {
   background-color: #43a047 !important;
 }
 
 .hidden {
   display: none !important;
+}
+
+.exp-caption-text {
+  font-size: 150px;
+  font-weight: 600;
+}
+
+#checkoutContainer {
+  margin-top: 50% !important;
+}
+
+.exp-text {
+  color: #f57f17;
+}
+
+#queryContainer {
+  margin-top: 50% !important;
 }
