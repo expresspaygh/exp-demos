@@ -1,16 +1,11 @@
 from expay_sdk import merchant_api
-from expay_sdk.utility import config
+
 """
 Init keys
 """
 environment = "sandbox"
 merchant_id = "089237783227"
 merchant_key = "JKR91Vs1zEcuAj9LwMXQu-H3LPrDq1XCKItTKpmLY1-XsBgCnNpkDT1GER8ih9f-UTYoNINatMbreNIRavgu-89wPOnY6F7mz1lXP3LZ"
-
-"""
-Init config setup
-"""
-config = config.Config(merchant_id, merchant_key)
 
 """
 Init import classes
