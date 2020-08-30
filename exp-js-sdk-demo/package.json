@@ -1,0 +1,14 @@
+{
+  "name": "exp-js-sdk-demo",
+  "version": "1.0.0",
+  "description": "expressPay Ghana js sdk demo",
+  "main": "cmd_test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeffery Osei",
+  "license": "MIT",
+  "dependencies": {
+    "@expresspaygh/expresspay-js-sdk": "^1.0.0"
+  }
+}
